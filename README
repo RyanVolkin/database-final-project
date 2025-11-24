@@ -1,5 +1,5 @@
 TO SET UP cd ./client npm install 
           cd ./server npm install
-
+          cd ./server npm run setup
 TO RUN FRONTEND cd ./client npm run dev
 TO RUN BACKEND cd ./server node server.js
