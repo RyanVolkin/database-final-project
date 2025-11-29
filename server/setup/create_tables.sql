@@ -8,18 +8,20 @@ CREATE TABLE IF NOT EXISTS Building (
 );
 
 CREATE TABLE IF NOT EXISTS BuildingAchievement (
-    BuildingIRN INT PRIMARY KEY REFERENCES Building(BuildingIRN),
+    BuildingIRN INT PRIMARY KEY,
     PerfIndexScore DECIMAL(5, 2),
     StudentsLimited DECIMAL(5, 2),
     StudentsBasic DECIMAL(5, 2),
     StudentsProficient DECIMAL(5, 2),
     StudentsAccomplished DECIMAL(5, 2),
     StudentsAdvanced DECIMAL(5, 2),
-    StudentsAdvancedPlus DECIMAL(5, 2)
+    StudentsAdvancedPlus DECIMAL(5, 2),
+
+    FOREIGN KEY (BuildingIRN) REFERENCES Building(BuildingIRN)
 );
 
 CREATE TABLE IF NOT EXISTS HighSchoolAchievement (
-    BuildingIRN INT PRIMARY KEY REFERENCES Building(BuildingIRN),
+    BuildingIRN INT PRIMARY KEY,
     PathCompletedPc DECIMAL(5, 2),
     SATSatisfactoryPc DECIMAL(5, 2),
     HonorDiplomaPc DECIMAL(5, 2),
@@ -29,12 +31,17 @@ CREATE TABLE IF NOT EXISTS HighSchoolAchievement (
     MilitaryEnlistedPc DECIMAL(5, 2),
     TechProficiencyPc DECIMAL(5, 2),
     WBLCompletionPc DECIMAL(5, 2),
-    FourYearGradRate DECIMAL(5, 2)
+    FourYearGradRate DECIMAL(5, 2),
+
+    FOREIGN KEY (BuildingIRN) REFERENCES Building(BuildingIRN)
 );
 
 CREATE TABLE IF NOT EXISTS BelongsTo (
-    BuildingIRN INT PRIMARY KEY REFERENCES Building(BuildingIRN),
-    DistrictIRN INT PRIMARY KEY REFERENCES District(DistrictIRN)
+    BuildingIRN INT,
+    DistrictIRN INT,
+    PRIMARY KEY (BuildingIRN, DistrictIRN),
+    FOREIGN KEY (BuildingIRN) REFERENCES Building(BuildingIRN),
+    FOREIGN KEY (DistrictIRN) REFERENCES District(DistrictIRN)
 );
 
 CREATE TABLE IF NOT EXISTS District (
@@ -44,12 +51,14 @@ CREATE TABLE IF NOT EXISTS District (
 );
 
 CREATE TABLE IF NOT EXISTS DistrictAchievement (
-    DistrictIRN INT PRIMARY KEY REFERENCES District(DistrictIRN),
+    DistrictIRN INT PRIMARY KEY,
     PerfIndexScore DECIMAL(5, 2),
     StudentsLimited DECIMAL(5, 2),
     StudentsBasic DECIMAL(5, 2),
     StudentsProficient DECIMAL(5, 2),
     StudentsAccomplished DECIMAL(5, 2),
     StudentsAdvanced DECIMAL(5, 2),
-    StudentsAdvancedPlus DECIMAL(5, 2)
+    StudentsAdvancedPlus DECIMAL(5, 2),
+    
+    FOREIGN KEY (DistrictIRN) REFERENCES District(DistrictIRN)
 );
