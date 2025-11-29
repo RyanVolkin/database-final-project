@@ -1,0 +1,48 @@
+SELECT 
+District.Name,
+DistrictAchievement.PerfIndexStore
+FROM District
+JOIN DistrictAchievement
+ON District.DistrictIRN = DistrictAchievement.DistrictIRN
+WHERE DistrictAchievement.PerfIndexStore > 70;
+
+
+
+SELECT 
+District.DistrictIRN,
+District.Name,
+COUNT(BelongsTo.BuildingIRN)
+FROM District
+JOIN BelongsTo
+ON District.DistrictIRN = BelongsTo.DistrictIRN
+WHERE District.DistrictIRN = ‘044248'
+GROUP BY 
+District.DistrictIRN,
+District.Name;
+
+
+
+SELECT 
+Building.BuildingIRN,
+Building.Name,
+BuildingEnrollment,
+Building.AttendanceRate,
+Building.MobilityRate,
+Building.ChronicAbsenteeismRate,
+BuildingAchievement.PerfIndexScore,
+BuildingAchievement.StudentsLimited,
+BuildingAchievement.StudentsBasic,
+BuildingAchievement.StudentsProficient,
+BuildingAchievement.StudentsAccomplished,
+BuildingAchievement.StudentsAdvanced,
+BuildingAchievement.StudentsAdvancedPlus,
+FROM Building
+LEFT JOIN BuildingAchievement
+ON Building.BuildingIRN = BuildingAchievement.BuildingIRN
+WHERE Building.Name = 'Asbury Elementary School';
+
+
+
+SELECT 
+AVG(ChronicAbsenteeismRate) AS AvgChronicAbsenteeismRate
+FROM Building;
