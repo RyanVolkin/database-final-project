@@ -214,25 +214,25 @@ onMounted(() => fetchDistricts());
                     {{ item.schoolcount ?? '-' }}
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.perfindexscore, stats.perfindexscore.min, stats.perfindexscore.max, stats.perfindexscore.median), padding: '6px', borderRadius: '6px' }">{{ item.perfindexscore ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.perfindexscore, stats?.perfindexscore?.min ?? 0, stats?.perfindexscore?.max ?? 0, stats?.perfindexscore?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.perfindexscore ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentslimited, stats.studentslimited.min, stats.studentslimited.max, stats.studentslimited.median, false), padding: '6px', borderRadius: '6px' }">{{ item.studentslimited ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.studentslimited, stats?.studentslimited?.min ?? 0, stats?.studentslimited?.max ?? 0, stats?.studentslimited?.median ?? 0, false), padding: '6px', borderRadius: '6px' }">{{ item.studentslimited ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentsbasic, stats.studentsbasic.min, stats.studentsbasic.max, stats.studentsbasic.median), padding: '6px', borderRadius: '6px' }">{{ item.studentsbasic ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.studentsbasic, stats?.studentsbasic?.min ?? 0, stats?.studentsbasic?.max ?? 0, stats?.studentsbasic?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.studentsbasic ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentsproficient, stats.studentsproficient.min, stats.studentsproficient.max, stats.studentsproficient.median), padding: '6px', borderRadius: '6px' }">{{ item.studentsproficient ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.studentsproficient, stats?.studentsproficient?.min ?? 0, stats?.studentsproficient?.max ?? 0, stats?.studentsproficient?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.studentsproficient ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentsaccomplished, stats.studentsaccomplished.min, stats.studentsaccomplished.max, stats.studentsaccomplished.median), padding: '6px', borderRadius: '6px' }">{{ item.studentsaccomplished ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.studentsaccomplished, stats?.studentsaccomplished?.min ?? 0, stats?.studentsaccomplished?.max ?? 0, stats?.studentsaccomplished?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.studentsaccomplished ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentsadvanced, stats.studentsadvanced.min, stats.studentsadvanced.max, stats.studentsadvanced.median), padding: '6px', borderRadius: '6px' }">{{ item.studentsadvanced ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.studentsadvanced, stats?.studentsadvanced?.min ?? 0, stats?.studentsadvanced?.max ?? 0, stats?.studentsadvanced?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.studentsadvanced ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentsadvancedplus, stats.studentsadvancedplus.min, stats.studentsadvancedplus.max, stats.studentsadvancedplus.median), padding: '6px', borderRadius: '6px' }">{{ item.studentsadvancedplus ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.studentsadvancedplus, stats?.studentsadvancedplus?.min ?? 0, stats?.studentsadvancedplus?.max ?? 0, stats?.studentsadvancedplus?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.studentsadvancedplus ?? '-' }}</span>
                 </td>
             </tr>
         </tbody>

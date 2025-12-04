@@ -1,6 +1,6 @@
 const fs = require('fs').promises;
 const path = require('path');
-const { Pool } = require('pg');
+const { neon } = require('@neondatabase/serverless');
 const { parse } = require('csv-parse/sync');
 require('dotenv').config();
 
@@ -34,8 +34,7 @@ async function run() {
     process.exit(1);
   }
 
-  const pool = new Pool(config);
-  const client = await pool.connect();
+  const client = neon(process.env.DATABASE_URL);
   let hadError = false;
 
   try {
@@ -75,8 +74,15 @@ async function run() {
               `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 ORDER BY ordinal_position`,
               [tableName.toLowerCase()]
             );
-            const columns = colRes.rows.map(r => r.column_name);
-            const colTypes = colRes.rows.map(r => r.data_type);
+            console.log('column query result shape:', colRes);
+            // Handle different client result shapes (pg vs neon)
+            let colRows;
+            if (Array.isArray(colRes)) colRows = colRes;
+            else if (colRes && Array.isArray(colRes.rows)) colRows = colRes.rows;
+            else if (colRes && colRes.result && Array.isArray(colRes.result.rows)) colRows = colRes.result.rows;
+            else colRows = [];
+            const columns = colRows.map(r => r.column_name);
+            const colTypes = colRows.map(r => r.data_type);
             if (!columns.length) {
               throw new Error(`No columns found for table ${tableName}`);
             }
@@ -118,7 +124,7 @@ async function run() {
               }
 
               const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
-              const insertSql = `INSERT INTO ${tableName} (${columns.join(',')}) VALUES (${placeholders})`;
+              const insertSql = `INSERT INTO ${tableName} (${columns.join(',')}) VALUES (${placeholders}) ON CONFLICT DO NOTHING`;
               try {
                 await client.query(insertSql, values);
               } catch (err) {
@@ -131,14 +137,22 @@ async function run() {
           await client.query('COMMIT');
         } else {
           await client.query('BEGIN');
-          await client.query(sql);
+          // Some clients (serverless drivers) disallow multiple statements in a single prepared
+          // statement. Split the SQL file into individual statements and run them one-by-one.
+          const statements = sql
+            .split(/;\s*(?:\r?\n|$)/)
+            .map(s => s.trim())
+            .filter(Boolean);
+          for (const stmt of statements) {
+            await client.query(stmt);
+          }
           await client.query('COMMIT');
         }
         console.log(`Success: ${file}`);
       } catch (err) {
         await client.query('ROLLBACK');
         hadError = true;
-        console.error(`Error running ${file}:`, err.message || err);
+        console.error(`Error running ${file}:`, err);
       }
     }
     if (hadError) {
@@ -148,8 +162,14 @@ async function run() {
 
     console.log('All SQL files executed successfully.');
   } finally {
-    client.release();
-    await pool.end();
+    try {
+      if (client) {
+        if (typeof client.release === 'function') await client.release();
+        else if (typeof client.end === 'function') await client.end();
+      }
+    } catch (err) {
+      console.error('Error closing client:', err);
+    }
   }
 }
 

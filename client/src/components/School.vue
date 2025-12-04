@@ -16,8 +16,7 @@ interface SchoolItem {
     studentsproficient: number | null;
 }
 
-const props = defineProps<{ items: SchoolItem[] }>();
-const itemsLocal = ref<SchoolItem[]>(props.items ?? []);
+const itemsLocal = ref<SchoolItem[]>([]);
 
 const searchName = ref('');
 const showFilters = ref(false);

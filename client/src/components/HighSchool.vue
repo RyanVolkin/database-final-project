@@ -221,34 +221,34 @@ onMounted(() => fetchHighSchools());
       <tr v-for="item in itemsLocal" :key="item.irn">
         <td>{{ item.name ?? '-' }}</td>
         <td>
-          <span :style="{ backgroundColor: color(item.pathcompletedpc, stats.pathcompletedpc.min, stats.pathcompletedpc.max, stats.pathcompletedpc.median), padding: '6px', borderRadius: '6px' }">{{ item.pathcompletedpc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.pathcompletedpc, stats?.pathcompletedpc?.min ?? 0, stats?.pathcompletedpc?.max ?? 0, stats?.pathcompletedpc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.pathcompletedpc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.satsatisfactorypc, stats.satsatisfactorypc.min, stats.satsatisfactorypc.max, stats.satsatisfactorypc.median), padding: '6px', borderRadius: '6px' }">{{ item.satsatisfactorypc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.satsatisfactorypc, stats?.satsatisfactorypc?.min ?? 0, stats?.satsatisfactorypc?.max ?? 0, stats?.satsatisfactorypc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.satsatisfactorypc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.honordiplomapc, stats.honordiplomapc.min, stats.honordiplomapc.max, stats.honordiplomapc.median), padding: '6px', borderRadius: '6px' }">{{ item.honordiplomapc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.honordiplomapc, stats?.honordiplomapc?.min ?? 0, stats?.honordiplomapc?.max ?? 0, stats?.honordiplomapc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.honordiplomapc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.apiboutstandingpc, stats.apiboutstandingpc.min, stats.apiboutstandingpc.max, stats.apiboutstandingpc.median), padding: '6px', borderRadius: '6px' }">{{ item.apiboutstandingpc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.apiboutstandingpc, stats?.apiboutstandingpc?.min ?? 0, stats?.apiboutstandingpc?.max ?? 0, stats?.apiboutstandingpc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.apiboutstandingpc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.careerreadypc, stats.careerreadypc.min, stats.careerreadypc.max, stats.careerreadypc.median), padding: '6px', borderRadius: '6px' }">{{ item.careerreadypc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.careerreadypc, stats?.careerreadypc?.min ?? 0, stats?.careerreadypc?.max ?? 0, stats?.careerreadypc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.careerreadypc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.dualreadypc, stats.dualreadypc.min, stats.dualreadypc.max, stats.dualreadypc.median), padding: '6px', borderRadius: '6px' }">{{ item.dualreadypc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.dualreadypc, stats?.dualreadypc?.min ?? 0, stats?.dualreadypc?.max ?? 0, stats?.dualreadypc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.dualreadypc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.militaryenlistedpc, stats.militaryenlistedpc.min, stats.militaryenlistedpc.max, stats.militaryenlistedpc.median), padding: '6px', borderRadius: '6px' }">{{ item.militaryenlistedpc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.militaryenlistedpc, stats?.militaryenlistedpc?.min ?? 0, stats?.militaryenlistedpc?.max ?? 0, stats?.militaryenlistedpc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.militaryenlistedpc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.techproficiencypc, stats.techproficiencypc.min, stats.techproficiencypc.max, stats.techproficiencypc.median), padding: '6px', borderRadius: '6px' }">{{ item.techproficiencypc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.techproficiencypc, stats?.techproficiencypc?.min ?? 0, stats?.techproficiencypc?.max ?? 0, stats?.techproficiencypc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.techproficiencypc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.wblcompletionpc, stats.wblcompletionpc.min, stats.wblcompletionpc.max, stats.wblcompletionpc.median), padding: '6px', borderRadius: '6px' }">{{ item.wblcompletionpc ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.wblcompletionpc, stats?.wblcompletionpc?.min ?? 0, stats?.wblcompletionpc?.max ?? 0, stats?.wblcompletionpc?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.wblcompletionpc ?? '-' }}</span>
         </td>
         <td>
-          <span :style="{ backgroundColor: color(item.fouryeargradrate, stats.fouryeargradrate.min, stats.fouryeargradrate.max, stats.fouryeargradrate.median), padding: '6px', borderRadius: '6px' }">{{ item.fouryeargradrate ?? '-' }}</span>
+          <span :style="{ backgroundColor: color(item.fouryeargradrate, stats?.fouryeargradrate?.min ?? 0, stats?.fouryeargradrate?.max ?? 0, stats?.fouryeargradrate?.median ?? 0), padding: '6px', borderRadius: '6px' }">{{ item.fouryeargradrate ?? '-' }}</span>
         </td>
       </tr>
     </tbody>

@@ -22,7 +22,6 @@ export async function getSchools(params?: Record<string, string | number | boole
       if (v === null || v === undefined) continue;
       qp.set(k, String(v));
     }
-    console.log(qp.toString());
   }
   const url = `${BASE}/schools` + (qp.toString() ? `?${qp.toString()}` : '');
   return fetch(url, {

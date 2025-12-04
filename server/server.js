@@ -1,36 +1,19 @@
 require('dotenv').config(); // Load environment variables
 const express = require('express');
 const cors = require('cors');
-const { Pool } = require('pg');
+const {neon} = require('@neondatabase/serverless');
 const app = express();
 const port = process.env.PORT || 3000;
 
+const pool = neon(process.env.DATABASE_URL);
+
 console.log(`Server is starting on port: ${port}`);
-console.log(process.env.DB_USER)
 
 app.use(express.json()); // Enable JSON body parsing
 // Enable CORS for development. This adds the Access-Control-Allow-Origin header
 // so your client (e.g. http://localhost:5173) can call this API.
 app.use(cors());
 
-// PostgreSQL connection pool
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PASSWORD,
-    port: process.env.DB_PORT,
-});
-app.get('/api/highschools', async (req, res) => {
-    try {
-        const sql = `SELECT irn, name FROM Building WHERE level = 'High' ORDER BY name`;
-        const result = await pool.query(sql);
-        res.json(result.rows);
-    } catch (err) {
-        console.log(err);
-        res.status(500).json({ error: 'Internal server error' });
-    }
-});
 app.get('/api/district', async (req, res) => {
     try {
         const q = req.query || {};
@@ -102,7 +85,7 @@ app.get('/api/district', async (req, res) => {
                      GROUP BY d.irn, d.name, da.perfindexscore, da.studentslimited, da.studentsbasic, da.studentsproficient, da.studentsaccomplished, da.studentsadvanced, da.studentsadvancedplus
                      ${havingClause}`;
         const result = await pool.query(sql, params);
-        res.json(result.rows);
+        res.json(result);
 
     } catch (err) {
         console.log(err);
@@ -156,7 +139,6 @@ app.get('/api/schools', async (req, res) => {
         }
 
         const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
-        console.log(whereClause);
         const sql = `SELECT b.irn AS irn,
                             b.name AS name,
                             b.enrollment,
@@ -173,10 +155,9 @@ app.get('/api/schools', async (req, res) => {
                      FROM Building b
                      LEFT JOIN BuildingAchievement ba ON b.irn = ba.irn
                      ${whereClause}`;
-        console.log(sql);
 
         const result = await pool.query(sql, params);
-        res.json(result.rows);
+        res.json(result);
 
     } catch (err) {
         console.log(err);
@@ -248,7 +229,7 @@ app.get('/api/schools', async (req, res) => {
                          ${whereClause}`;
 
             const result = await pool.query(sql, params);
-            res.json(result.rows);
+            res.json(result);
 
         } catch (err) {
             console.log(err);
