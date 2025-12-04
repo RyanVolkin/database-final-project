@@ -1,4 +1,4 @@
-const BASE = "http://localhost:3000/api";
+const BASE = "https://database-final-project-vyji.onrender.com";
 
 export async function getDistrict(params?: Record<string, string | number | boolean | null | undefined>) {
   const qp = new URLSearchParams();
