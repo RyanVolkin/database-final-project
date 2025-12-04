@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS Building (
-    BuildingIRN INT PRIMARY KEY,
-    BuildingName VARCHAR(100),
+    IRN INT PRIMARY KEY,
+    Name VARCHAR(100),
     Enrollment INT,
     AttendanceRate DECIMAL(5, 2),
     MobilityRate DECIMAL(5, 2),
@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS Building (
 );
 
 CREATE TABLE IF NOT EXISTS BuildingAchievement (
-    BuildingIRN INT PRIMARY KEY,
+    IRN INT PRIMARY KEY,
     PerfIndexScore DECIMAL(5, 2),
     StudentsLimited DECIMAL(5, 2),
     StudentsBasic DECIMAL(5, 2),
@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS BuildingAchievement (
     StudentsAdvanced DECIMAL(5, 2),
     StudentsAdvancedPlus DECIMAL(5, 2),
 
-    FOREIGN KEY (BuildingIRN) REFERENCES Building(BuildingIRN)
+    FOREIGN KEY (IRN) REFERENCES Building(IRN)
 );
 
 CREATE TABLE IF NOT EXISTS HighSchoolAchievement (
-    BuildingIRN INT PRIMARY KEY,
+    IRN INT PRIMARY KEY,
     PathCompletedPc DECIMAL(5, 2),
     SATSatisfactoryPc DECIMAL(5, 2),
     HonorDiplomaPc DECIMAL(5, 2),
@@ -33,25 +33,25 @@ CREATE TABLE IF NOT EXISTS HighSchoolAchievement (
     WBLCompletionPc DECIMAL(5, 2),
     FourYearGradRate DECIMAL(5, 2),
 
-    FOREIGN KEY (BuildingIRN) REFERENCES Building(BuildingIRN)
+    FOREIGN KEY (IRN) REFERENCES Building(IRN)
 );
-
+CREATE TABLE IF NOT EXISTS District (
+    IRN INT PRIMARY KEY,
+    Name VARCHAR(100),
+    County VARCHAR(15)
+);
 CREATE TABLE IF NOT EXISTS BelongsTo (
     BuildingIRN INT,
     DistrictIRN INT,
     PRIMARY KEY (BuildingIRN, DistrictIRN),
-    FOREIGN KEY (BuildingIRN) REFERENCES Building(BuildingIRN),
-    FOREIGN KEY (DistrictIRN) REFERENCES District(DistrictIRN)
+    FOREIGN KEY (BuildingIRN) REFERENCES Building(IRN),
+    FOREIGN KEY (DistrictIRN) REFERENCES District(IRN)
 );
 
-CREATE TABLE IF NOT EXISTS District (
-    DistrictIRN INT PRIMARY KEY,
-    DistrictName VARCHAR(100),
-    County VARCHAR(15)
-);
+
 
 CREATE TABLE IF NOT EXISTS DistrictAchievement (
-    DistrictIRN INT PRIMARY KEY,
+    IRN INT PRIMARY KEY,
     PerfIndexScore DECIMAL(5, 2),
     StudentsLimited DECIMAL(5, 2),
     StudentsBasic DECIMAL(5, 2),
@@ -60,5 +60,5 @@ CREATE TABLE IF NOT EXISTS DistrictAchievement (
     StudentsAdvanced DECIMAL(5, 2),
     StudentsAdvancedPlus DECIMAL(5, 2),
     
-    FOREIGN KEY (DistrictIRN) REFERENCES District(DistrictIRN)
+    FOREIGN KEY (IRN) REFERENCES District(IRN)
 );

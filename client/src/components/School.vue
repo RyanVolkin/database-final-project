@@ -1,119 +1,87 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, reactive } from 'vue';
-import { getDistrict } from '../services/api';
+import { computed, ref, reactive, onMounted } from 'vue';
+import { getSchools } from '../services/api';
 
-interface DistrictItem {
-  irn: number;
-  name: string | null;
-  perfindexscore: number | null;
-  studentslimited: number | null;
-  studentsbasic: number | null;
-  studentsproficient: number | null;
-  studentsaccomplished: number | null;
-  studentsadvanced: number | null;
-  studentsadvancedplus: number | null;
-  schoolcount: number | null;
+interface SchoolItem {
+    chronicabsenteeismrate: number | null;
+    enrollment: number | null;
+    irn: number;
+    name: string | null;
+    perfindexscore: number | null;
+    studentsaccomplished: number | null;
+    studentsadvanced: number | null;
+    studentsadvancedplus: number | null;
+    studentsbasic: number | null;
+    studentslimited: number | null;
+    studentsproficient: number | null;
 }
 
-const itemsLocal = ref<DistrictItem[]>([]);
+const props = defineProps<{ items: SchoolItem[] }>();
+const itemsLocal = ref<SchoolItem[]>(props.items ?? []);
 
 const searchName = ref('');
 const showFilters = ref(false);
+
 const filters = reactive<Record<string, { min?: number; max?: number }>>({
+    enrollment: {},
+    chronicabsenteeismrate: {},
     perfindexscore: {},
-    studentslimited: {},
     studentsbasic: {},
     studentsproficient: {},
     studentsaccomplished: {},
     studentsadvanced: {},
     studentsadvancedplus: {},
-    schoolcount: {},
 });
-
-let fetchTimeout: ReturnType<typeof setTimeout> | null = null;
-
 interface Stat { min: number; max: number; median: number }
-function calcStats(field: keyof DistrictItem): Stat {
+function calcStats(field: keyof SchoolItem): Stat {
     const raw = itemsLocal.value.map(item => item[field]);
-    const vals = raw
-        .map(v => {
-            if (v === null || v === undefined) return NaN;
-            if (typeof v === 'number') return v;
-            if (typeof v === 'string') {
-                const n = Number(v.replace(/[^0-9.\-eE]/g, ''));
-                return Number.isFinite(n) ? n : NaN;
-            }
-            return NaN;
-        })
-        .filter(n => Number.isFinite(n)) as number[];
-    if (!vals.length) return { min: 0, max: 0, median: 0 };
-    const s = vals.slice().sort((a, b) => a - b);
-    const min = s[0]!;
-    const max = s[s.length - 1]!;
-    const mid = Math.floor(s.length / 2);
-    const median = s.length % 2 === 1 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
-    return { min, max, median };
+        const vals = raw
+            .map(v => {
+                if (v === null || v === undefined) return NaN;
+                if (typeof v === 'number') return v;
+                if (typeof v === 'string') {
+                    const n = Number(v.replace(/[^0-9.\-eE]/g, ''));
+                    return Number.isFinite(n) ? n : NaN;
+                }
+                return NaN;
+            })
+            .filter(n => Number.isFinite(n)) as number[];
+
+        if (!vals.length) return { min: 0, max: 0, median: 0 };
+        const s = vals.slice().sort((a, b) => a - b);
+        const min = s[0]!;
+        const max = s[s.length - 1]!;
+        const mid = Math.floor(s.length / 2);
+        const median = s.length % 2 === 1 ? s[mid]! : (s[mid - 1]! + s[mid]!) / 2;
+        return { min, max, median };
 }
 
-const stats = computed(() => ({
+type StatMap = Record<
+  | 'chronicabsenteeismrate'
+  | 'enrollment'
+  | 'perfindexscore'
+  | 'studentsaccomplished'
+  | 'studentsadvanced'
+  | 'studentsadvancedplus'
+  | 'studentsbasic'
+  | 'studentsproficient',
+  Stat
+>;
+
+const stats = computed<StatMap>(() => ({
+  chronicabsenteeismrate: calcStats('chronicabsenteeismrate'),
+  enrollment: calcStats('enrollment'),
   perfindexscore: calcStats('perfindexscore'),
-  studentslimited: calcStats('studentslimited'),
-  studentsbasic: calcStats('studentsbasic'),
-  studentsproficient: calcStats('studentsproficient'),
   studentsaccomplished: calcStats('studentsaccomplished'),
   studentsadvanced: calcStats('studentsadvanced'),
   studentsadvancedplus: calcStats('studentsadvancedplus'),
-  schoolcount: calcStats('schoolcount'),
-} as Record<string, Stat>));
+  studentsbasic: calcStats('studentsbasic'),
+  studentsproficient: calcStats('studentsproficient'),
+}));
 
-function color (score: number | string | null | undefined, minScore: number, maxScore: number, medScore: number, higherIsBetter = true): string {
-    let sNum: number | null = null;
-    if (score === null || score === undefined) sNum = null;
-    else if (typeof score === 'number') sNum = score;
-    else if (typeof score === 'string') {
-        const n = Number(score.replace(/[^0-9.\-eE]/g, ''));
-        sNum = Number.isFinite(n) ? n : null;
-    }
-    if (sNum === null) return '';
-    let med = medScore;
-    if (med === null || med === undefined) med = (minScore + maxScore) / 2;
-    if (med < minScore) med = minScore;
-    if (med > maxScore) med = maxScore;
-    if (maxScore === minScore) return itemsLocal.value.length ? 'rgb(255,255,0)' : 'rgb(200,200,200)';
-    let r = 0; let g = 0;
-    if (higherIsBetter) {
-        if (sNum <= med) {
-            const denom = (med - minScore) || 1;
-            let ratio = (sNum - minScore) / denom;
-            ratio = Math.max(0, Math.min(1, ratio));
-            r = 255;
-            g = Math.round(255 * ratio);
-        } else {
-            const denom = (maxScore - med) || 1;
-            let ratio = (sNum - med) / denom;
-            ratio = Math.max(0, Math.min(1, ratio));
-            g = 255;
-            r = Math.round(255 * (1 - ratio));
-        }
-    } else {
-        if (sNum <= med) {
-            const denom = (med - minScore) || 1;
-            let ratio = (sNum - minScore) / denom;
-            ratio = Math.max(0, Math.min(1, ratio));
-            r = Math.round(255 * ratio);
-            g = 255;
-        } else {
-            const denom = (maxScore - med) || 1;
-            let ratio = (sNum - med) / denom;
-            ratio = Math.max(0, Math.min(1, ratio));
-            r = 255;
-            g = Math.round(255 * (1 - ratio));
-        }
-    }
-    return `rgb(${r}, ${g}, 0)`;
-}
-
-async function fetchDistricts() {
+// Fetching from server when filters/search change
+let fetchTimeout: ReturnType<typeof setTimeout> | null = null;
+async function fetchSchools() {
     try {
         const params: Record<string, string | number> = {};
         if (searchName.value) params['name'] = searchName.value;
@@ -123,12 +91,12 @@ async function fetchDistricts() {
             if (f.min !== undefined && f.min !== null) params[`${k}_min`] = f.min;
             if (f.max !== undefined && f.max !== null) params[`${k}_max`] = f.max;
         }
-        const res = await getDistrict(params);
+        const res = await getSchools(params);
         if (!res.ok) throw new Error(`Server returned ${res.status}`);
         const data = await res.json();
         itemsLocal.value = data;
     } catch (err) {
-        console.error('Failed to fetch districts', err);
+        console.error('Failed to fetch schools', err);
     }
 }
 
@@ -137,7 +105,7 @@ function applyFilters() {
         clearTimeout(fetchTimeout);
         fetchTimeout = null;
     }
-    fetchDistricts();
+    fetchSchools();
 }
 
 function resetFilters() {
@@ -151,8 +119,63 @@ function resetFilters() {
 function toggleFilters() {
     showFilters.value = !showFilters.value;
 }
+onMounted(() => {
+    fetchSchools();
+});
 
-onMounted(() => fetchDistricts());
+
+function color (score: number | string | null | undefined, minScore: number, maxScore: number, medScore: number, higherIsBetter = true): string {
+    let sNum: number | null = null;
+    if (score === null || score === undefined) sNum = null;
+    else if (typeof score === 'number') sNum = score;
+    else if (typeof score === 'string') {
+        const n = Number(score.replace(/[^0-9.\-eE]/g, ''));
+        sNum = Number.isFinite(n) ? n : null;
+    }
+    if (sNum === null) return '';
+    const min = minScore;
+    const max = maxScore;
+    let med = medScore;
+    if (med === null || med === undefined) med = (min + max) / 2;
+    if (med < min) med = min;
+    if (med > max) med = max;
+    if (max === min) {
+        return itemsLocal.value.length ? 'rgb(255, 255, 0)' : 'rgb(200,200,200)';
+    }
+    let r = 0;
+    let g = 0;
+    if (higherIsBetter) {
+        if (sNum <= med) {
+            const denom = (med - min) || 1;
+            let ratio = (sNum - min) / denom;
+            ratio = Math.max(0, Math.min(1, ratio));
+            r = 255;
+            g = Math.round(255 * ratio);
+        } else {
+            const denom = (max - med) || 1;
+            let ratio = (sNum - med) / denom;
+            ratio = Math.max(0, Math.min(1, ratio));
+            g = 255;
+            r = Math.round(255 * (1 - ratio));
+        }
+    } else {
+        if (sNum <= med) {
+            const denom = (med - min) || 1;
+            let ratio = (sNum - min) / denom;
+            ratio = Math.max(0, Math.min(1, ratio));
+            r = Math.round(255 * ratio);
+            g = 255;
+        } else {
+            const denom = (max - med) || 1;
+            let ratio = (sNum - med) / denom;
+            ratio = Math.max(0, Math.min(1, ratio));
+            r = 255;
+            g = Math.round(255 * (1 - ratio));
+        }
+    }
+    return `rgb(${r}, ${g}, 0)`;
+}
+
 </script>
 
 <template>
@@ -193,31 +216,31 @@ onMounted(() => fetchDistricts());
             </v-card>
         </v-dialog>
     </div>
-    <v-table class="rounded-lg border elevation-1">
+    <v-table class="rounded-lg border elevation-1 ">
         <thead>
             <tr>
                 <th class="text-left">Name</th>
-                <th class="text-left"># Schools</th>
+                <th class="text-left">Enrollment</th>
+                <th class="text-left">Chronic Absenteeism %</th>
                 <th class="text-left">Performance Index</th>
-                <th class="text-left">Students Limited</th>
-                <th class="text-left">Students Basic</th>
-                <th class="text-left">Students Proficient</th>
-                <th class="text-left">Students Accomplished</th>
-                <th class="text-left">Students Advanced</th>
-                <th class="text-left">Students Advanced Plus</th>
+                <th class="text-left">Students Basic %</th>
+                <th class="text-left">Students Proficient %</th>
+                <th class="text-left">Students Accomplished %</th>
+                <th class="text-left">Students Advanced %</th>
+                <th class="text-left">Students Advanced Plus %</th>
             </tr>
         </thead>
         <tbody>
             <tr v-for="item in itemsLocal" :key="item.irn">
                 <td>{{ item.name ?? '-' }}</td>
                 <td>
-                    {{ item.schoolcount ?? '-' }}
+                   {{ item.enrollment ?? '-' }}
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.perfindexscore, stats.perfindexscore.min, stats.perfindexscore.max, stats.perfindexscore.median), padding: '6px', borderRadius: '6px' }">{{ item.perfindexscore ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.chronicabsenteeismrate, stats.chronicabsenteeismrate.min, stats.chronicabsenteeismrate.max, stats.chronicabsenteeismrate.median, false), padding: '6px', borderRadius: '6px' }">{{ item.chronicabsenteeismrate ?? '-' }}</span>
                 </td>
                 <td>
-                    <span :style="{ backgroundColor: color(item.studentslimited, stats.studentslimited.min, stats.studentslimited.max, stats.studentslimited.median, false), padding: '6px', borderRadius: '6px' }">{{ item.studentslimited ?? '-' }}</span>
+                    <span :style="{ backgroundColor: color(item.perfindexscore, stats.perfindexscore.min, stats.perfindexscore.max, stats.perfindexscore.median), padding: '6px', borderRadius: '6px' }">{{ item.perfindexscore !== null ? item.perfindexscore : '-' }}</span>
                 </td>
                 <td>
                     <span :style="{ backgroundColor: color(item.studentsbasic, stats.studentsbasic.min, stats.studentsbasic.max, stats.studentsbasic.median), padding: '6px', borderRadius: '6px' }">{{ item.studentsbasic ?? '-' }}</span>

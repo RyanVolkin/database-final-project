@@ -1,6 +1,7 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { Pool } = require('pg');
+const { parse } = require('csv-parse/sync');
 require('dotenv').config();
 
 // Runner lives at server/, queries are in server/setup
@@ -52,9 +53,87 @@ async function run() {
       const sql = await fs.readFile(filePath, 'utf8');
 
       try {
-        await client.query('BEGIN');
-        await client.query(sql);
-        await client.query('COMMIT');
+        // If the SQL file contains psql client-side "\copy" commands,
+        // handle them by reading the CSV on the client and inserting rows.
+        const copyLines = Array.from(sql.matchAll(/^\\copy\s+([^\s]+)\s+FROM\s+'([^']+)'/gim));
+        if (copyLines.length) {
+          await client.query('BEGIN');
+          for (const m of copyLines) {
+            const tableName = m[1];
+            const csvPath = m[2];
+            console.log(`Processing client-side copy for table ${tableName} from ${csvPath}`);
+            const resolved = path.isAbsolute(csvPath) ? csvPath : path.join(__dirname, csvPath);
+            let data;
+            try {
+              data = await fs.readFile(resolved, 'utf8');
+            } catch (err) {
+              throw new Error(`Failed to read CSV file ${resolved}: ${err.message}`);
+            }
+
+            // Get column names and data types for the table in their ordinal order
+            const colRes = await client.query(
+              `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = $1 ORDER BY ordinal_position`,
+              [tableName.toLowerCase()]
+            );
+            const columns = colRes.rows.map(r => r.column_name);
+            const colTypes = colRes.rows.map(r => r.data_type);
+            if (!columns.length) {
+              throw new Error(`No columns found for table ${tableName}`);
+            }
+
+            // Parse CSV robustly (handles quoted fields and commas inside fields)
+            const records = parse(data, { skip_empty_lines: true, trim: true });
+            // Insert rows (one statement per row, parameterized). This is simple and reliable.
+            for (const record of records) {
+              const values = record.map((v, idx) => {
+                // Normalize common missing tokens to null
+                if (v === null || v === undefined) return null;
+                if (typeof v === 'string') v = v.trim();
+                if (v === '' || v === '--' || v.toUpperCase() === 'NA' || v.toUpperCase() === 'N/A' || v.toUpperCase() === 'NULL') return null;
+
+                const type = colTypes[idx] || 'text';
+                // Coerce numeric types
+                if (['integer', 'bigint', 'smallint'].includes(type)) {
+                  const n = Number(v);
+                  return Number.isFinite(n) ? Math.trunc(n) : null;
+                }
+                if (['numeric', 'decimal', 'double precision', 'real'].includes(type)) {
+                  const n = Number(v);
+                  return Number.isFinite(n) ? n : null;
+                }
+                if (type === 'boolean') {
+                  const lv = String(v).toLowerCase();
+                  if (lv === 't' || lv === 'true' || lv === '1') return true;
+                  if (lv === 'f' || lv === 'false' || lv === '0') return false;
+                  return null;
+                }
+                // Default: string
+                return v;
+              });
+              // If CSV has fewer columns than table, pad with nulls; if more, truncate.
+              if (values.length < columns.length) {
+                while (values.length < columns.length) values.push(null);
+              } else if (values.length > columns.length) {
+                values.length = columns.length;
+              }
+
+              const placeholders = values.map((_, i) => `$${i + 1}`).join(',');
+              const insertSql = `INSERT INTO ${tableName} (${columns.join(',')}) VALUES (${placeholders})`;
+              try {
+                await client.query(insertSql, values);
+              } catch (err) {
+                // Log helpful debug info and rethrow to trigger rollback
+                console.error(`Failed inserting into ${tableName}. Parsed values:`, values);
+                throw err;
+              }
+            }
+          }
+          await client.query('COMMIT');
+        } else {
+          await client.query('BEGIN');
+          await client.query(sql);
+          await client.query('COMMIT');
+        }
         console.log(`Success: ${file}`);
       } catch (err) {
         await client.query('ROLLBACK');
